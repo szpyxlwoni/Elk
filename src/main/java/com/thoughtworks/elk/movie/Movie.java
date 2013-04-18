@@ -1,4 +1,4 @@
 package com.thoughtworks.elk.movie;
 
-public class Movie {
+public interface Movie {
 }
