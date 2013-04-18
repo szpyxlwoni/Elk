@@ -8,6 +8,9 @@ import org.w3c.dom.NodeList;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
+import java.util.ArrayList;
+
+import static com.google.common.collect.Lists.newArrayList;
 
 public class ElkContainer {
 
@@ -17,20 +20,28 @@ public class ElkContainer {
         Document document = loadXmlFile(propertyPath);
         NodeList beans = document.getElementsByTagName("bean");
         for (int i = 0; i < beans.getLength(); i++) {
-            NamedNodeMap attributes = beans.item(i).getAttributes();
+            Node node = beans.item(i);
+            NamedNodeMap attributes = node.getAttributes();
+            NodeList childNodes = node.getChildNodes();
+            if (childNodes.getLength() == 1) {
+                beanPool.register(getValue(attributes, "id"), getValue(attributes, "class"));
+                continue;
+            }
+            registerComponentByRef(attributes, childNodes);
+        }
+    }
 
-            NodeList childNodes = beans.item(i).getChildNodes();
-            for (int j = 0; j < childNodes.getLength(); j++) {
-                Node properties = childNodes.item(i);
-                if (properties.getNodeName().equals("constructor-arg")) {
-                    beanPool.register(getValue(attributes, "id"), getValue(attributes, "class"), getRefValue(properties, "ref"), getRefValue(properties, "type"));
-                    break;
-                } else {
-                    beanPool.register(getValue(attributes, "id"), getValue(attributes, "class"));
-                    break;
-                }
+    private void registerComponentByRef(NamedNodeMap attributes, NodeList childNodes) {
+        ArrayList refs = newArrayList();
+        ArrayList types = newArrayList();
+        for (int j = 0; j < childNodes.getLength(); j++) {
+            Node childNode = childNodes.item(j);
+            if (childNode.getNodeName().equals("constructor-arg")) {
+                refs.add(getRefValue(childNode, "ref"));
+                types.add(getRefValue(childNode, "type"));
             }
         }
+        beanPool.register(getValue(attributes, "id"), getValue(attributes, "class"), refs, types);
     }
 
     private String getRefValue(Node node, String key) {

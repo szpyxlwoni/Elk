@@ -1,10 +1,12 @@
 package com.thoughtworks.elk.container;
 
+import java.util.ArrayList;
+
 public class Bean {
     private String id;
     private String clazz;
-    private String ref;
-    private String type;
+    private ArrayList ref;
+    private ArrayList type;
 
     public void setId(String id) {
         this.id = id;
@@ -14,7 +16,7 @@ public class Bean {
         this.clazz = clazz;
     }
 
-    public void setRef(String ref) {
+    public void setRef(ArrayList ref) {
         this.ref = ref;
     }
 
@@ -22,7 +24,7 @@ public class Bean {
         return id;
     }
 
-    public String getRef() {
+    public ArrayList getRef() {
         return ref;
     }
 
@@ -30,11 +32,11 @@ public class Bean {
         return clazz;
     }
 
-    public void setType(String type) {
+    public void setType(ArrayList type) {
         this.type = type;
     }
 
-    public String getType() {
+    public ArrayList getType() {
         return type;
     }
 }

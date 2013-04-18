@@ -4,7 +4,7 @@ public class Director {
 
     private Movie movie;
 
-    public Director(Movie movie) {
+    public Director(Movie movie, Company company) {
         this.movie = movie;
     }
 

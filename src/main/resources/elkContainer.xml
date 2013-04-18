@@ -9,8 +9,11 @@ http://www.springframework.org/schema/beans http://www.springframework.org/schem
           class="com.thoughtworks.elk.movie.Titanic">
     </bean>
 
+    <bean id="company" class="com.thoughtworks.elk.movie.Hollywood"/>
+
     <bean id="director" class="com.thoughtworks.elk.movie.Director">
         <constructor-arg ref="movie" type="com.thoughtworks.elk.movie.Movie"/>
+        <constructor-arg ref="company" type="com.thoughtworks.elk.movie.Company"/>
     </bean>
 
 </beans>
