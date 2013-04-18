@@ -11,7 +11,7 @@ import static org.hamcrest.core.IsNull.notNullValue;
 public class ElkContainerTest {
     @Test
     public void should_get_a_movie_given_a_direct() {
-        ElkContainer elkContainer = configuration();
+        ElkContainer elkContainer = new ElkContainer();
         Object director = elkContainer.getBean("director");
         assertThat(((Director) director).getMovie(), notNullValue());
     }

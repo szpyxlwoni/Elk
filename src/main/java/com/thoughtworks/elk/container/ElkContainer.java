@@ -11,11 +11,9 @@ import static com.google.common.collect.Maps.newHashMap;
 public class ElkContainer {
     static HashMap beanList = newHashMap();
 
-    public static ElkContainer configuration() {
-        ElkContainer elkContainer = new ElkContainer();
-        elkContainer.add("movie", new Titanic());
-        elkContainer.add("director", new Director((Movie) elkContainer.getBean("movie")));
-        return elkContainer;
+    public ElkContainer() {
+        this.add("movie", new Titanic());
+        this.add("director", new Director((Movie) this.getBean("movie")));
     }
 
     private void add(String beanName, Object bean) {
