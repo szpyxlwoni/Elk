@@ -1,6 +1,7 @@
 package com.thoughtworks.elk.container.test;
 
 import com.thoughtworks.elk.container.ConfigXmlParser;
+import com.thoughtworks.elk.container.exception.ElkParseException;
 import org.junit.Before;
 import org.junit.Test;
 import org.w3c.dom.Node;
@@ -18,9 +19,14 @@ public class ConfigXmlParserTest {
     private ConfigXmlParser configSetterXmlParser;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() throws Exception, ElkParseException {
         configConstructorXmlParser = new ConfigXmlParser("testConstructorInjection.xml");
         configSetterXmlParser = new ConfigXmlParser("testSetterInjection.xml");
+    }
+
+    @Test(expected = ElkParseException.class)
+    public void shouldSThrowElkParseException() throws ElkParseException {
+        new ConfigXmlParser("fake_file.xml");
     }
 
     @Test

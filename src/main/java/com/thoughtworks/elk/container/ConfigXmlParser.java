@@ -2,6 +2,7 @@ package com.thoughtworks.elk.container;
 
 import com.google.common.base.Function;
 import com.sun.istack.internal.Nullable;
+import com.thoughtworks.elk.container.exception.ElkParseException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -19,14 +20,14 @@ public class ConfigXmlParser {
 
     private Document doc;
 
-    public ConfigXmlParser(String configFilePath) {
+    public ConfigXmlParser(String configFilePath) throws ElkParseException {
         InputStream resourceAsStream = this.getClass().getClassLoader().getResourceAsStream(configFilePath);
         DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
         try {
             DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
             doc = dBuilder.parse(resourceAsStream);
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new ElkParseException(e.getMessage());
         }
     }
 
