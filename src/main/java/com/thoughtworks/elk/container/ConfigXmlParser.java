@@ -86,4 +86,8 @@ public class ConfigXmlParser {
     public List getPropertiesRef(String beanId) {
         return getChildNodeAttribute(beanId, "property", "ref");
     }
+
+    public List getPropertiesType(String beanId) {
+        return getChildNodeAttribute(beanId, "property", "type");
+    }
 }

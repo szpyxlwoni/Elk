@@ -77,4 +77,12 @@ public class ConfigXmlParserTest {
         assertThat(propertiesName.get(0), is("movie"));
         assertThat(propertiesName.size(), is(1));
     }
+
+    @Test
+    public void should_get_properties_type_given_a_bean_id() {
+        List<String> propertiesName = configSetterXmlParser.getPropertiesType("director");
+
+        assertThat(propertiesName.get(0), is("com.thoughtworks.elk.movie.Movie"));
+        assertThat(propertiesName.size(), is(1));
+    }
 }

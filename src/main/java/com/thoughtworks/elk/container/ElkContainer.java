@@ -6,6 +6,7 @@ import com.thoughtworks.elk.container.exception.ElkContainerException;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
 
@@ -29,7 +30,7 @@ public class ElkContainer {
             Class<?> beanClass = Class.forName(configParser.getBeanClass(beanId));
             List dependencies = configParser.getConstructorDependenciesClass(beanId);
             if (dependencies.size() == 0) {
-                objectList.put(beanId, beanClass.newInstance());
+                buildWithoutDependencies(beanId, beanClass);
             } else {
                 buildWithDependencies(beanId, beanClass, dependencies);
             }
@@ -37,6 +38,20 @@ public class ElkContainer {
             throw new ElkContainerException(e.getMessage());
         }
         return objectList.get(beanId);
+    }
+
+    private void buildWithoutDependencies(String beanId, Class<?> beanClass) throws NoSuchMethodException,
+            InstantiationException, IllegalAccessException, InvocationTargetException, ElkContainerException, ClassNotFoundException {
+        objectList.put(beanId, beanClass.newInstance());
+        List<String> propertiesName = configParser.getPropertiesName(beanId);
+        List<String> propertiesRef = configParser.getPropertiesRef(beanId);
+        List<String> propertiesType = configParser.getPropertiesType(beanId);
+        for (int i = 0; i < propertiesName.size(); i++) {
+            String propertyName = propertiesName.get(i);
+            propertyName = "set" + propertyName.replaceFirst(propertyName.charAt(0) + "", String.valueOf(propertyName.charAt(0)).toUpperCase());
+            Method declaredMethod = beanClass.getDeclaredMethod(propertyName, Class.forName(configParser.getBeanClass(propertiesType.get(i))));
+            declaredMethod.invoke(getBean(propertiesRef.get(i)));
+        }
     }
 
     private void buildWithDependencies(String beanId, Class<?> beanClass, List dependencies) throws NoSuchMethodException,
