@@ -20,6 +20,9 @@ public class ElkContainer {
     }
 
     public Object getBean(String beanId) {
+        if (objectList.get(beanId) != null) {
+            return objectList.get(beanId);
+        }
         try {
             Class<?> beanClass = Class.forName(configParser.getBeanClass(beanId));
             List dependencies = configParser.getConstructorDependenciesClass(beanId);
