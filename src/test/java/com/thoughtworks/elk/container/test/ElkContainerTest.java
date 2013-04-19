@@ -1,6 +1,7 @@
 package com.thoughtworks.elk.container.test;
 
 import com.thoughtworks.elk.container.ElkContainer;
+import com.thoughtworks.elk.container.exception.ElkContainerException;
 import com.thoughtworks.elk.movie.Director;
 import org.junit.Before;
 import org.junit.Test;
@@ -18,13 +19,13 @@ public class ElkContainerTest {
     }
 
     @Test
-    public void should_get_a_bean_given_xml_file_without_dependencies() {
+    public void should_get_a_bean_given_xml_file_without_dependencies() throws ElkContainerException {
         Object movie = elkContainer.getBean("movie");
         assertThat(movie, notNullValue());
     }
 
     @Test
-    public void should_get_a_bean_given_xml_file_with_dependencies() {
+    public void should_get_a_bean_given_xml_file_with_dependencies() throws ElkContainerException {
         Director director = (Director) elkContainer.getBean("director");
         assertThat(director, notNullValue());
     }

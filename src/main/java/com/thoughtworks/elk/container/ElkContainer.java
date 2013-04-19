@@ -2,6 +2,7 @@ package com.thoughtworks.elk.container;
 
 import com.google.common.base.Function;
 import com.sun.istack.internal.Nullable;
+import com.thoughtworks.elk.container.exception.ElkContainerException;
 
 import java.lang.reflect.Constructor;
 import java.util.HashMap;
@@ -19,7 +20,7 @@ public class ElkContainer {
         configParser = new ConfigXmlParser(configFilePath);
     }
 
-    public Object getBean(String beanId) {
+    public Object getBean(String beanId) throws ElkContainerException {
         if (objectList.get(beanId) != null) {
             return objectList.get(beanId);
         }
@@ -34,7 +35,7 @@ public class ElkContainer {
                 objectList.put(beanId, object);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new ElkContainerException(e.getMessage());
         }
         return objectList.get(beanId);
     }
@@ -43,7 +44,12 @@ public class ElkContainer {
         return transform(constructorDependenciesName, new Function<Object, Object>() {
             @Override
             public Object apply(@Nullable java.lang.Object o) {
-                return getBean((String) o);
+                try {
+                    return getBean((String) o);
+                } catch (ElkContainerException e) {
+                    e.printStackTrace();
+                    return null;
+                }
             }
         }).toArray(new Object[0]);
     }
