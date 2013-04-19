@@ -1,71 +1,62 @@
 package com.thoughtworks.elk.container;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
+import com.google.common.base.Function;
+import com.sun.istack.internal.Nullable;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import java.io.File;
-import java.util.ArrayList;
+import java.lang.reflect.Constructor;
+import java.util.HashMap;
+import java.util.List;
 
-import static com.google.common.collect.Lists.newArrayList;
+import static com.google.common.collect.Lists.transform;
+import static com.google.common.collect.Maps.newHashMap;
 
 public class ElkContainer {
 
-    private final BeanPool beanPool = new BeanPool();
+    private HashMap<String, Object> objectList = newHashMap();
+    private final ConfigXmlParser configParser;
 
-    public ElkContainer(String propertyPath) {
-        Document document = loadXmlFile(propertyPath);
-        NodeList beans = document.getElementsByTagName("bean");
-        for (int i = 0; i < beans.getLength(); i++) {
-            Node node = beans.item(i);
-            NamedNodeMap attributes = node.getAttributes();
-            NodeList childNodes = node.getChildNodes();
-            if (childNodes.getLength() == 1) {
-                beanPool.register(getValue(attributes, "id"), getValue(attributes, "class"));
-                continue;
-            }
-            registerComponentByRef(attributes, childNodes);
-        }
+    public ElkContainer(String configFilePath) {
+        configParser = new ConfigXmlParser(configFilePath);
     }
 
-    private void registerComponentByRef(NamedNodeMap attributes, NodeList childNodes) {
-        ArrayList refs = newArrayList();
-        ArrayList types = newArrayList();
-        for (int j = 0; j < childNodes.getLength(); j++) {
-            Node childNode = childNodes.item(j);
-            if (childNode.getNodeName().equals("constructor-arg")) {
-                refs.add(getRefValue(childNode, "ref"));
-                types.add(getRefValue(childNode, "type"));
-            }
-        }
-        beanPool.register(getValue(attributes, "id"), getValue(attributes, "class"), refs, types);
-    }
-
-    private String getRefValue(Node node, String key) {
-        return node.getAttributes().getNamedItem(key).getNodeValue();
-    }
-
-    private String getValue(NamedNodeMap attributes, String key) {
-        return attributes.getNamedItem(key).getNodeValue();
-    }
-
-    private Document loadXmlFile(String propertyPath) {
-        File fXmlFile = new File(propertyPath);
-        DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-        Document doc = null;
+    public Object getBean(String beanId) {
         try {
-            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-            doc = dBuilder.parse(fXmlFile);
+            Class<?> beanClass = Class.forName(configParser.getBeanClass(beanId));
+            List dependencies = configParser.getConstructorDependenciesClass(beanId);
+            if (dependencies.size() == 0) {
+                objectList.put(beanId, beanClass.newInstance());
+            } else {
+                Constructor<?> declaredConstructor = beanClass.getDeclaredConstructor(toClassArray(dependencies));
+                Object object = declaredConstructor.newInstance(toObjectArray(configParser.getConstructorDependenciesName(beanId)));
+                objectList.put(beanId, object);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return doc;
+        return objectList.get(beanId);
     }
 
-    public Object getBean(String beanName) {
-        return beanPool.getBean(beanName);
+    private Object[] toObjectArray(List constructorDependenciesName) {
+        return transform(constructorDependenciesName, new Function<Object, Object>() {
+            @Override
+            public Object apply(@Nullable java.lang.Object o) {
+                return getBean((String) o);
+            }
+        }).toArray(new Object[0]);
     }
+
+    private Class[] toClassArray(List dependencies) {
+        return (Class[]) transform(dependencies, new Function<Object, Object>() {
+            @Override
+            public Object apply(@Nullable Object o) {
+                try {
+                    return Class.forName((String) o);
+                } catch (ClassNotFoundException e) {
+                    e.printStackTrace();
+                }
+                return null;
+            }
+        }).toArray(new Class[0]);
+    }
+
 }
