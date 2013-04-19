@@ -62,20 +62,28 @@ public class ConfigXmlParser {
     }
 
     public List getConstructorDependenciesClass(String beanId) {
-        return getChildNodeAttribute(beanId, "type");
+        return getChildNodeAttribute(beanId, "constructor-arg", "type");
     }
 
     public List getConstructorDependenciesName(String beanId) {
-        return getChildNodeAttribute(beanId, "ref");
+        return getChildNodeAttribute(beanId, "constructor-arg", "ref");
     }
 
-    private List getChildNodeAttribute(String beanId, final String attribute) {
-        ArrayList<Node> childNodes = getChildNodes(beanId, "constructor-arg");
+    private List getChildNodeAttribute(String beanId, String childName, final String attribute) {
+        ArrayList<Node> childNodes = getChildNodes(beanId, childName);
         return transform(childNodes, new Function<Node, Object>() {
             @Override
             public Object apply(@Nullable Node node) {
                 return node.getAttributes().getNamedItem(attribute).getNodeValue();
             }
         });
+    }
+
+    public List getPropertiesName(String beanId) {
+        return getChildNodeAttribute(beanId, "property", "name");
+    }
+
+    public List getPropertiesRef(String beanId) {
+        return getChildNodeAttribute(beanId, "property", "ref");
     }
 }

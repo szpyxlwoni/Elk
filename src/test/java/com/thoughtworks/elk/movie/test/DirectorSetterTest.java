@@ -10,10 +10,6 @@ import static org.hamcrest.core.IsNull.notNullValue;
 public class DirectorSetterTest {
     @Test
     public void should_get_movie() {
-        DirectorSetter directorSetter = new DirectorSetter();
 
-        directorSetter.setMovie(new Titanic());
-
-        assertThat(directorSetter.getMovie(), notNullValue());
     }
 }
