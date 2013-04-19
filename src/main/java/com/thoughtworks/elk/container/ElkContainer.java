@@ -3,6 +3,7 @@ package com.thoughtworks.elk.container;
 import com.google.common.base.Function;
 import com.sun.istack.internal.Nullable;
 import com.thoughtworks.elk.container.exception.ElkContainerException;
+import com.thoughtworks.elk.container.exception.ElkParseException;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -17,7 +18,7 @@ public class ElkContainer {
     private HashMap<String, Object> objectList = newHashMap();
     private final ConfigXmlParser configParser;
 
-    public ElkContainer(String configFilePath) {
+    public ElkContainer(String configFilePath) throws ElkParseException {
         configParser = new ConfigXmlParser(configFilePath);
     }
 
