@@ -18,7 +18,7 @@ public class ConfigXmlParserTest {
 
     @Before
     public void setUp() throws Exception {
-        configXmlParser = new ConfigXmlParser("testElkContainer.xml");
+        configXmlParser = new ConfigXmlParser("testConstructorInjection.xml");
     }
 
     @Test
@@ -41,14 +41,14 @@ public class ConfigXmlParserTest {
     public void should_get_class_name_given_a_bean_id() {
         String attribute = configXmlParser.getBeanClass("company");
 
-        assertThat(attribute, is("com.thoughtworks.elk.movie.Hollywood"));
+        assertThat(attribute, is("Hollywood"));
     }
 
     @Test
     public void should_get_constructor_dependencies_class_given_a_bean_id() {
         List<String> constructorDependencies = configXmlParser.getConstructorDependenciesClass("director");
 
-        assertThat(constructorDependencies.get(0), is("com.thoughtworks.elk.movie.Movie"));
+        assertThat(constructorDependencies.get(0), is("Movie"));
         assertThat(constructorDependencies.size(), is(2));
     }
 

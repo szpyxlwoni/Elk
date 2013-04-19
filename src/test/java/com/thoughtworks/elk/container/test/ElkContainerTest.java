@@ -14,7 +14,7 @@ public class ElkContainerTest {
 
     @Before
     public void setUp() throws Exception {
-        elkContainer = new ElkContainer("testElkContainer.xml");
+        elkContainer = new ElkContainer("testConstructorInjection.xml");
     }
 
     @Test
