@@ -2,10 +2,13 @@ Elk
 ===
 
 TODO List
+- [X] implement constructor injection
 - [ ] more tests for container
 - [ ] refactor code
 - [ ] add some exception handlers
-- [ ] find better way to parse XML file
-- [ ] make XML parser can load the XML file which is in classpath
-- [ ] implement setter injection
+- [X] make XML parser can load the XML file which is in classpath
+- [X] implement setter injection
 - [ ] implement scoped container
+- [ ] Option:delete type attribute in xml config file
+- [ ] Option:implement factory injection
+- [ ] Option:implement annotation
