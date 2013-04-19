@@ -5,6 +5,7 @@ import com.sun.istack.internal.Nullable;
 import com.thoughtworks.elk.container.exception.ElkContainerException;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.List;
 
@@ -30,14 +31,19 @@ public class ElkContainer {
             if (dependencies.size() == 0) {
                 objectList.put(beanId, beanClass.newInstance());
             } else {
-                Constructor<?> declaredConstructor = beanClass.getDeclaredConstructor(toClassArray(dependencies));
-                Object object = declaredConstructor.newInstance(toObjectArray(configParser.getConstructorDependenciesName(beanId)));
-                objectList.put(beanId, object);
+                buildWithDependencies(beanId, beanClass, dependencies);
             }
         } catch (Exception e) {
             throw new ElkContainerException(e.getMessage());
         }
         return objectList.get(beanId);
+    }
+
+    private void buildWithDependencies(String beanId, Class<?> beanClass, List dependencies) throws NoSuchMethodException,
+            InstantiationException, IllegalAccessException, InvocationTargetException {
+        Constructor<?> declaredConstructor = beanClass.getDeclaredConstructor(toClassArray(dependencies));
+        Object object = declaredConstructor.newInstance(toObjectArray(configParser.getConstructorDependenciesName(beanId)));
+        objectList.put(beanId, object);
     }
 
     private Object[] toObjectArray(List constructorDependenciesName) {
