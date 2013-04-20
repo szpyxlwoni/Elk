@@ -36,7 +36,7 @@ public class ElkContainer {
                 buildWithDependencies(beanId, beanClass, dependencies);
             }
         } catch (Exception e) {
-            throw new ElkContainerException(e.getMessage());
+            e.printStackTrace();
         }
         return objectList.get(beanId);
     }
@@ -44,15 +44,22 @@ public class ElkContainer {
     private void buildWithoutDependencies(String beanId, Class<?> beanClass) throws NoSuchMethodException,
             InstantiationException, IllegalAccessException, InvocationTargetException, ElkContainerException, ClassNotFoundException {
         objectList.put(beanId, beanClass.newInstance());
-        List<String> propertiesName = configParser.getPropertiesName(beanId);
-        List<String> propertiesRef = configParser.getPropertiesRef(beanId);
-        List<String> propertiesType = configParser.getPropertiesType(beanId);
-        for (int i = 0; i < propertiesName.size(); i++) {
-            String propertyName = propertiesName.get(i);
-            propertyName = "set" + propertyName.replaceFirst(propertyName.charAt(0) + "", String.valueOf(propertyName.charAt(0)).toUpperCase());
-            Method declaredMethod = beanClass.getDeclaredMethod(propertyName, Class.forName(configParser.getBeanClass(propertiesType.get(i))));
-            declaredMethod.invoke(getBean(propertiesRef.get(i)));
+        List<Property> properties = configParser.getProperties(beanId);
+        for (int i = 0; i < properties.size(); i++) {
+            Property property = properties.get(i);
+            Class<?> parameterClass = Class.forName(property.getType());
+            Method declaredMethod = beanClass.getDeclaredMethod(changeNameToSetMethod(property.getName()), parameterClass);
+            declaredMethod.invoke(objectList.get(beanId), getParameterObject(property, parameterClass));
         }
+    }
+
+    private Object getParameterObject(Property property, Class<?> parameterClass)
+            throws ElkContainerException, InstantiationException, IllegalAccessException {
+        return property.getRef() != null ? getBean(property.getRef()) : parameterClass.newInstance();
+    }
+
+    private String changeNameToSetMethod(String propertyName) {
+        return "set" + propertyName.replaceFirst(propertyName.charAt(0) + "", String.valueOf(propertyName.charAt(0)).toUpperCase());
     }
 
     private void buildWithDependencies(String beanId, Class<?> beanClass, List dependencies) throws NoSuchMethodException,

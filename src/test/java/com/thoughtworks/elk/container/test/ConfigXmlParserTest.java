@@ -1,6 +1,7 @@
 package com.thoughtworks.elk.container.test;
 
 import com.thoughtworks.elk.container.ConfigXmlParser;
+import com.thoughtworks.elk.container.Property;
 import com.thoughtworks.elk.container.exception.ElkParseException;
 import org.junit.Before;
 import org.junit.Test;
@@ -70,25 +71,11 @@ public class ConfigXmlParserTest {
 
     @Test
     public void should_get_properties_name_given_a_bean_id() {
-        List<String> propertiesName = configSetterXmlParser.getPropertiesName("director");
+        List<Property> properties = configSetterXmlParser.getProperties("director");
 
-        assertThat(propertiesName.get(0), is("movie"));
-        assertThat(propertiesName.size(), is(1));
-    }
-
-    @Test
-    public void should_get_properties_ref_given_a_bean_id() {
-        List<String> propertiesName = configSetterXmlParser.getPropertiesRef("director");
-
-        assertThat(propertiesName.get(0), is("movie"));
-        assertThat(propertiesName.size(), is(1));
-    }
-
-    @Test
-    public void should_get_properties_type_given_a_bean_id() {
-        List<String> propertiesName = configSetterXmlParser.getPropertiesType("director");
-
-        assertThat(propertiesName.get(0), is("com.thoughtworks.elk.movie.Movie"));
-        assertThat(propertiesName.size(), is(1));
+        assertThat(properties.get(0).getName(), is("movie"));
+        assertThat(properties.get(0).getRef(), is("movie"));
+        assertThat(properties.get(0).getType(), is("com.thoughtworks.elk.movie.Movie"));
+        assertThat(properties.size(), is(1));
     }
 }

@@ -4,6 +4,7 @@ import com.thoughtworks.elk.movie.DirectorSetter;
 import com.thoughtworks.elk.movie.Titanic;
 import org.junit.Test;
 
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.IsNull.notNullValue;
 

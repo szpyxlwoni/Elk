@@ -10,7 +10,7 @@
     </bean>
 
     <bean id="director" class="com.thoughtworks.elk.movie.DirectorSetter">
-         <property name="movie" ref="movie" type="com.thoughtworks.elk.movie.Movie"></property>
+        <property name="movie" ref="movie" type="com.thoughtworks.elk.movie.Movie"></property>
     </bean>
 
 </beans>

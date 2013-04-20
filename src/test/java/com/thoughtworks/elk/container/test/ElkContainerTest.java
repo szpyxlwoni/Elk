@@ -5,6 +5,7 @@ import com.thoughtworks.elk.container.exception.ElkContainerException;
 import com.thoughtworks.elk.movie.Director;
 import com.thoughtworks.elk.movie.DirectorSetter;
 import com.thoughtworks.elk.movie.Movie;
+import org.hamcrest.CoreMatchers;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -42,7 +43,8 @@ public class ElkContainerTest {
     public void should_get_a_bean_given_xml_with_setter_injection() throws ElkContainerException {
         DirectorSetter director = (DirectorSetter) elkContainerSetter.getBean("director");
 
+        assertThat(director, notNullValue());
         assertThat(director.getMovie(), notNullValue());
-        assertThat(director, is(instanceOf(Director.class)));
+        assertThat(director, is(instanceOf(DirectorSetter.class)));
     }
 }

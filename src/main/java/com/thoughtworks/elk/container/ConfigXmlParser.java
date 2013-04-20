@@ -80,15 +80,14 @@ public class ConfigXmlParser {
         });
     }
 
-    public List getPropertiesName(String beanId) {
-        return getChildNodeAttribute(beanId, "property", "name");
-    }
-
-    public List getPropertiesRef(String beanId) {
-        return getChildNodeAttribute(beanId, "property", "ref");
-    }
-
-    public List getPropertiesType(String beanId) {
-        return getChildNodeAttribute(beanId, "property", "type");
+    public List getProperties(String beanId) {
+        List<String> propertyName = getChildNodeAttribute(beanId, "property", "name");
+        List<String> propertyRef = getChildNodeAttribute(beanId, "property", "ref");
+        List<String> propertyType = getChildNodeAttribute(beanId, "property", "type");
+        List<Property> properties = newArrayList();
+        for (int i = 0; i < propertyName.size(); i++) {
+            properties.add(new Property(propertyName.get(i), propertyRef.get(i), propertyType.get(i)));
+        }
+        return properties;
     }
 }
