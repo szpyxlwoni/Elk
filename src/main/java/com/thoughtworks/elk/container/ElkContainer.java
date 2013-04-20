@@ -36,7 +36,7 @@ public class ElkContainer {
                 buildWithDependencies(beanId, beanClass, dependencies);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new ElkContainerException(e.getMessage());
         }
         return objectList.get(beanId);
     }
@@ -44,18 +44,18 @@ public class ElkContainer {
     private void buildWithoutDependencies(String beanId, Class<?> beanClass) throws NoSuchMethodException,
             InstantiationException, IllegalAccessException, InvocationTargetException, ElkContainerException, ClassNotFoundException {
         objectList.put(beanId, beanClass.newInstance());
+        callSetterInjection(beanId, beanClass);
+    }
+
+    private void callSetterInjection(String beanId, Class<?> beanClass) throws ClassNotFoundException, NoSuchMethodException,
+            IllegalAccessException, InvocationTargetException, ElkContainerException {
         List<Property> properties = configParser.getProperties(beanId);
         for (int i = 0; i < properties.size(); i++) {
             Property property = properties.get(i);
             Class<?> parameterClass = Class.forName(property.getType());
             Method declaredMethod = beanClass.getDeclaredMethod(changeNameToSetMethod(property.getName()), parameterClass);
-            declaredMethod.invoke(objectList.get(beanId), getParameterObject(property, parameterClass));
+            declaredMethod.invoke(objectList.get(beanId), getBean(property.getRef()));
         }
-    }
-
-    private Object getParameterObject(Property property, Class<?> parameterClass)
-            throws ElkContainerException, InstantiationException, IllegalAccessException {
-        return property.getRef() != null ? getBean(property.getRef()) : parameterClass.newInstance();
     }
 
     private String changeNameToSetMethod(String propertyName) {
@@ -64,12 +64,12 @@ public class ElkContainer {
 
     private void buildWithDependencies(String beanId, Class<?> beanClass, List dependencies) throws NoSuchMethodException,
             InstantiationException, IllegalAccessException, InvocationTargetException {
-        Constructor<?> declaredConstructor = beanClass.getDeclaredConstructor(toClassArray(dependencies));
-        Object object = declaredConstructor.newInstance(toObjectArray(configParser.getConstructorDependenciesName(beanId)));
+        Constructor<?> declaredConstructor = beanClass.getDeclaredConstructor(getDependenciesClass(dependencies));
+        Object object = declaredConstructor.newInstance(getDependenciesObject(configParser.getConstructorDependenciesName(beanId)));
         objectList.put(beanId, object);
     }
 
-    private Object[] toObjectArray(List constructorDependenciesName) {
+    private Object[] getDependenciesObject(List constructorDependenciesName) {
         return transform(constructorDependenciesName, new Function<Object, Object>() {
             @Override
             public Object apply(@Nullable java.lang.Object o) {
@@ -77,13 +77,13 @@ public class ElkContainer {
                     return getBean((String) o);
                 } catch (ElkContainerException e) {
                     e.printStackTrace();
-                    return null;
                 }
+                return null;
             }
         }).toArray(new Object[0]);
     }
 
-    private Class[] toClassArray(List dependencies) {
+    private Class[] getDependenciesClass(List dependencies) {
         return (Class[]) transform(dependencies, new Function<Object, Object>() {
             @Override
             public Object apply(@Nullable Object o) {
