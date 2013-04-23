@@ -23,10 +23,15 @@ public class ElkContainer {
     private final ConfigXmlParser configParser;
     private HashSet<Class> classList = newHashSet();
 
+    public ElkContainer() {
+        configParser = null;
+    }
+
     public ElkContainer(String configFile) throws ElkParseException {
         configParser = new ConfigXmlParser(configFile);
     }
 
+    @Deprecated
     public Object getBean(String beanId) throws ElkContainerException {
         if (objectList.get(beanId) == null) {
             newBean(beanId);
@@ -98,6 +103,10 @@ public class ElkContainer {
     }
 
     public <T> T getBean(final Class<T> clazz) throws ElkContainerException, IllegalAccessException, InvocationTargetException, InstantiationException {
+        if (!classList.contains(clazz)) {
+            return null;
+        }
+
         Constructor<?>[] constructors = clazz.getConstructors();
         ArrayList<Class> classes = newArrayList();
         for (int i = 0; i < constructors.length; i++) {
@@ -137,5 +146,9 @@ public class ElkContainer {
                 return clazzInContainer == clazz || Arrays.asList(clazzInContainer.getInterfaces()).contains(clazz);
             }
         });
+    }
+
+    public void addChildContainer(ElkContainer childContainer) {
+
     }
 }

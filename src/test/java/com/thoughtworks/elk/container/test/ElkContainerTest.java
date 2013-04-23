@@ -3,11 +3,15 @@ package com.thoughtworks.elk.container.test;
 import com.thoughtworks.elk.container.ElkContainer;
 import com.thoughtworks.elk.container.exception.ElkContainerException;
 import com.thoughtworks.elk.movie.*;
+import com.thoughtworks.elk.movie.test.Hero;
 import org.hamcrest.CoreMatchers;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.lang.reflect.InvocationTargetException;
+
 import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.notNullValue;
@@ -74,5 +78,13 @@ public class ElkContainerTest {
         assertThat(director, notNullValue());
         assertThat(director.getMovie(), notNullValue());
         assertThat(director, is(instanceOf(DirectorSetter.class)));
+    }
+
+    @Test
+    public void shouldNotGetABeanWithoutAdded() throws InvocationTargetException, ElkContainerException, InstantiationException, IllegalAccessException {
+        ElkContainer container = new ElkContainer();
+        container.addBean(Titanic.class);
+        assertThat(container.getBean(Titanic.class),is(instanceOf(Titanic.class)));
+        assertThat(container.getBean(Hero.class),is(nullValue()));
     }
 }
