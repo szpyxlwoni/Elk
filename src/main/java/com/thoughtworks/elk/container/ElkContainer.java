@@ -8,9 +8,11 @@ import com.thoughtworks.elk.container.exception.ElkParseException;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
-import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Lists.transform;
 import static com.google.common.collect.Maps.newHashMap;
 import static com.google.common.collect.Sets.filter;
@@ -23,6 +25,10 @@ public class ElkContainer {
     private HashSet<Class> classList = newHashSet();
     private HashMap beanList = newHashMap();
 
+    public ElkContainer() {
+        configParser = null;
+    }
+
     public ElkContainer(String configFile) throws ElkParseException {
         configParser = new ConfigXmlParser(configFile);
     }
@@ -33,6 +39,9 @@ public class ElkContainer {
 
     public <T> T getBean(final Class<T> clazz) throws ElkContainerException, IllegalAccessException, InvocationTargetException, InstantiationException {
         Constructor<?>[] constructors = clazz.getConstructors();
+        if (!classList.contains(clazz)) {
+            return null;
+        }
         if (constructors.length == 0) {
             return (T) getBean(findOneImplementClass(clazz));
         }
@@ -98,5 +107,8 @@ public class ElkContainer {
             }
         }
         return true;
+    }
+
+    public void addChildContainer(ElkContainer childContainer) {
     }
 }

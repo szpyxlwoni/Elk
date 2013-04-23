@@ -1,12 +1,18 @@
 package com.thoughtworks.elk.container.test;
 
 import com.thoughtworks.elk.container.ElkContainer;
+import com.thoughtworks.elk.container.exception.ElkContainerException;
 import com.thoughtworks.elk.movie.*;
+import com.thoughtworks.elk.movie.test.Hero;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.lang.reflect.InvocationTargetException;
+
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.notNullValue;
@@ -61,5 +67,13 @@ public class ElkContainerTest {
         Class implementClass = elkContainer.findOneImplementClass(Company.class);
 
         assertThat(implementClass.toString(), is("class com.thoughtworks.elk.movie.Hollywood"));
+    }
+
+    @Test
+    public void shouldNotGetABeanWithoutAdded() throws InvocationTargetException, InstantiationException, IllegalAccessException, ElkContainerException {
+        elkContainer.addBean(Titanic.class);
+
+        assertThat(elkContainer.getBean(Titanic.class), is(instanceOf(Titanic.class)));
+        assertThat(elkContainer.getBean(Hero.class), is(nullValue()));
     }
 }
