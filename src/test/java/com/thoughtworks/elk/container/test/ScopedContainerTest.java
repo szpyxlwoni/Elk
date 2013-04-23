@@ -4,6 +4,7 @@ package com.thoughtworks.elk.container.test;
 import com.thoughtworks.elk.container.ElkContainer;
 import com.thoughtworks.elk.container.exception.ElkContainerException;
 import com.thoughtworks.elk.movie.Company;
+import com.thoughtworks.elk.movie.Hollywood;
 import com.thoughtworks.elk.movie.Titanic;
 import com.thoughtworks.elk.movie.test.Hero;
 import org.hamcrest.core.IsInstanceOf;
@@ -42,6 +43,7 @@ public class ScopedContainerTest {
         ElkContainer parentContainer = new ElkContainer();
         ElkContainer childContainer = new ElkContainer();
         parentContainer.addChildContainer(childContainer);
+        parentContainer.addBean(Hollywood.class);
         parentContainer.addBean(Company.class);
         childContainer.addBean(Hero.class);
         assertThat(childContainer.ifAncestorContains(Company.class),is(true));

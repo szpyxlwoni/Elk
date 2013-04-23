@@ -41,12 +41,10 @@ public class ElkContainer {
     }
 
     public <T> T getBean(final Class<T> clazz) throws ElkContainerException, IllegalAccessException, InvocationTargetException, InstantiationException {
-//        if (!validScope(clazz)) return null;
+        if (!validScope(clazz)) return null;
 
         Constructor<?>[] constructors = clazz.getConstructors();
-        if (!classList.contains(clazz)) {
-            return null;
-        }
+
         if (constructors.length == 0) {
             return (T) getBean(findOneImplementClass(clazz));
         }
@@ -57,7 +55,6 @@ public class ElkContainer {
     }
 
     private <T> void buildBeanWithDependencies(Class<T> clazz, Constructor<?>[] constructors) throws InstantiationException, IllegalAccessException, InvocationTargetException {
-
         for (int i = 0; i < constructors.length; i++) {
             if (isParameterAllInBeanList(constructors[i].getParameterTypes())) {
                 beanList.put(clazz, constructors[i].newInstance(getDependenciesObject(constructors[i].getParameterTypes())));
@@ -67,29 +64,36 @@ public class ElkContainer {
     }
 
     public Class findOneImplementClass(final Class clazz) {
-        Set<Class> classes = findImplementClasses(clazz);
-        if (classes.size() == 1) {
-            return (Class) classes.toArray()[0];
+        Set<Class> classes = findImplementClasses(clazz, classList);
+        ElkContainer parentContainer = parent;
+        while (parentContainer != null && classes.size() != 1) {
+            if (findImplementClasses(clazz, parentContainer.classList).size() == 1) {
+                return (Class) findImplementClasses(clazz, parentContainer.classList).toArray()[0];
+            }
+            if (parentContainer.parent == null) {
+                return null;
+            }
+            parentContainer = parentContainer.parent;
         }
         return null;
     }
 
 
-    public <T> boolean validScope(Class<T> clazz) {
-        if (classList.contains(clazz)||ifAncestorContains(clazz)) {
-            return true;
-        }
-        return false;
-    }
-
-
-    private Set<Class> findImplementClasses(final Class clazz) {
-        return filter(classList, new Predicate<Class>() {
+    private Set<Class> findImplementClasses(final Class clazz, HashSet<Class> currentList) {
+        return filter(currentList, new Predicate<Class>() {
             @Override
             public boolean apply(@Nullable Class clazzInContainer) {
                 return Arrays.asList(clazzInContainer.getInterfaces()).contains(clazz);
             }
         });
+    }
+
+
+    public <T> boolean validScope(Class<T> clazz) {
+        if (filterDependencies(clazz, classList).size() == 1 || ifAncestorContains(clazz)) {
+            return true;
+        }
+        return false;
     }
 
     private Object[] getDependenciesObject(Class<?>[] classes) {
@@ -107,16 +111,25 @@ public class ElkContainer {
         }).toArray();
     }
 
-    private <T> Set<Class> filterDependencies(final Class<T> clazz) {
-        return filter(classList, new Predicate<Class>() {
+    public boolean isParameterAllInBeanList(Class<?>[] parameterTypes) {
+        for (int i = 0; i < parameterTypes.length; i++) {
+            if (validScope(parameterTypes[i])) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+
+
+    private <T> Set<Class> filterDependencies(final Class<T> clazz, HashSet<Class> currentList) {
+        return filter(currentList, new Predicate<Class>() {
             @Override
             public boolean apply(@Nullable Class clazzInContainer) {
                 return clazzInContainer == clazz || Arrays.asList(clazzInContainer.getInterfaces()).contains(clazz);
             }
         });
     }
-
-
 
     public void addChildContainer(ElkContainer childContainer) {
         if (children == null) {
@@ -127,25 +140,17 @@ public class ElkContainer {
     }
 
     public boolean ifAncestorContains(Class clazz) {
-        while (parent != null) {
-            if (this.parent.classList.contains(clazz)) {
+        ElkContainer parentContainer = parent;
+        while (parentContainer != null) {
+            if (parentContainer.classList.contains(clazz)) {
                 return true;
             }
-            if (this.parent.parent == null) {
+            if (parentContainer.parent == null) {
                 return false;
             }
-            parent = this.parent.parent;
+            parentContainer = parentContainer.parent;
         }
         return false;
-    }
-
-    public boolean isParameterAllInBeanList(Class<?>[] parameterTypes) {
-        for (int i = 0; i < parameterTypes.length; i++) {
-            if (filterDependencies(parameterTypes[i]).size() == 0) {
-                return false;
-            }
-        }
-        return true;
     }
 
 
