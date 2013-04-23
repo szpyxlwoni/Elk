@@ -8,7 +8,6 @@ import com.thoughtworks.elk.container.exception.ElkParseException;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.*;
 
 import static com.google.common.collect.Lists.newArrayList;
@@ -22,75 +21,10 @@ public class ElkContainer {
     private final HashMap<String, Object> objectList = newHashMap();
     private final ConfigXmlParser configParser;
     private HashSet<Class> classList = newHashSet();
+    private HashMap beanList = newHashMap();
 
     public ElkContainer(String configFile) throws ElkParseException {
         configParser = new ConfigXmlParser(configFile);
-    }
-
-    public Object getBean(String beanId) throws ElkContainerException {
-        if (objectList.get(beanId) == null) {
-            newBean(beanId);
-        }
-        return objectList.get(beanId);
-    }
-
-    private void newBean(String beanId) throws ElkContainerException {
-        try {
-            Class<?> beanClass = Class.forName(configParser.getBeanClass(beanId));
-            List dependencies = configParser.getConstructorDependenciesClass(beanId);
-            if (dependencies.size() == 0) {
-                buildWithSetterOrNoDependencies(beanId, beanClass);
-            } else {
-                buildWithConstructor(beanId, beanClass, dependencies);
-            }
-        } catch (Exception e) {
-            throw new ElkContainerException(e.getMessage());
-        }
-    }
-
-    private void buildWithSetterOrNoDependencies(String beanId, Class<?> beanClass) throws NoSuchMethodException,
-            InstantiationException, IllegalAccessException, InvocationTargetException, ElkContainerException, ClassNotFoundException {
-        objectList.put(beanId, beanClass.newInstance());
-        List<Property> properties = configParser.getProperties(beanId);
-        if (properties.size() != 0) {
-            callSetterInjection(beanId, beanClass, properties);
-        }
-    }
-
-    private void callSetterInjection(String beanId, Class<?> beanClass, List<Property> properties)
-            throws ClassNotFoundException, NoSuchMethodException,
-            IllegalAccessException, InvocationTargetException, ElkContainerException {
-        for (int i = 0; i < properties.size(); i++) {
-            Property property = properties.get(i);
-            Class<?> parameterClass = Class.forName(property.getType());
-            Method declaredMethod = beanClass.getDeclaredMethod(changeNameToSetMethod(property.getName()), parameterClass);
-            declaredMethod.invoke(objectList.get(beanId), getBean(property.getRef()));
-        }
-    }
-
-    private String changeNameToSetMethod(String propertyName) {
-        return "set" + propertyName.replaceFirst(propertyName.charAt(0) + "", String.valueOf(propertyName.charAt(0)).toUpperCase());
-    }
-
-    private void buildWithConstructor(String beanId, Class<?> beanClass, List dependencies) throws NoSuchMethodException,
-            InstantiationException, IllegalAccessException, InvocationTargetException {
-        Constructor<?> declaredConstructor = beanClass.getDeclaredConstructor(configParser.getDependenciesClass(dependencies));
-        Object object = declaredConstructor.newInstance(getDependenciesObject(configParser.getConstructorDependenciesName(beanId)));
-        objectList.put(beanId, object);
-    }
-
-    private Object[] getDependenciesObject(List constructorDependenciesName) {
-        return transform(constructorDependenciesName, new Function<Object, Object>() {
-            @Override
-            public Object apply(@Nullable Object o) {
-                try {
-                    return getBean((String) o);
-                } catch (ElkContainerException e) {
-                    e.printStackTrace();
-                }
-                return null;
-            }
-        }).toArray(new Object[0]);
     }
 
     public void addBean(Class clazz) {
@@ -99,25 +33,43 @@ public class ElkContainer {
 
     public <T> T getBean(final Class<T> clazz) throws ElkContainerException, IllegalAccessException, InvocationTargetException, InstantiationException {
         Constructor<?>[] constructors = clazz.getConstructors();
-        ArrayList<Class> classes = newArrayList();
+        if (constructors.length == 0) {
+            return (T) getBean(findOneImplementClass(clazz));
+        }
+        if (beanList.get(clazz) == null) {
+            buildBeanWithDependencies(clazz, constructors);
+        }
+        return (T) beanList.get(clazz);
+    }
+
+    private <T> void buildBeanWithDependencies(Class<T> clazz, Constructor<?>[] constructors) throws InstantiationException, IllegalAccessException, InvocationTargetException {
         for (int i = 0; i < constructors.length; i++) {
-            Class<?>[] parameterTypes = constructors[i].getParameterTypes();
-            for (int j = 0; j < parameterTypes.length; j++) {
-                Set<Class> dependency = filterDependencies(parameterTypes[j]);
-                if (dependency.size() == 1) {
-                    classes.add((Class) dependency.toArray()[0]);
-                }
+            if (isParameterAllInBeanList(constructors[i].getParameterTypes())) {
+                beanList.put(clazz, constructors[i].newInstance(getDependenciesObject(constructors[i].getParameterTypes())));
+                break;
             }
-            if (parameterTypes.length == classes.size()) {
-                return (T) constructors[i].newInstance(getDependenciesObject(classes));
-            }
-            classes.clear();
+        }
+    }
+
+    public Class findOneImplementClass(final Class clazz) {
+        Set<Class> classes = findImplementClasses(clazz);
+        if (classes.size() == 1) {
+            return (Class) classes.toArray()[0];
         }
         return null;
     }
 
-    private Object[] getDependenciesObject(ArrayList<Class> classesArr) {
-        return transform(classesArr, new Function<Object, Object>() {
+    private Set<Class> findImplementClasses(final Class clazz) {
+        return filter(classList, new Predicate<Class>() {
+            @Override
+            public boolean apply(@Nullable Class clazzInContainer) {
+                return Arrays.asList(clazzInContainer.getInterfaces()).contains(clazz);
+            }
+        });
+    }
+
+    private Object[] getDependenciesObject(Class<?>[] classes) {
+        return transform(Arrays.asList(classes), new Function<Object, Object>() {
             @Override
             public Object apply(@Nullable Object o) {
                 try {
@@ -137,5 +89,14 @@ public class ElkContainer {
                 return clazzInContainer == clazz || Arrays.asList(clazzInContainer.getInterfaces()).contains(clazz);
             }
         });
+    }
+
+    public boolean isParameterAllInBeanList(Class<?>[] parameterTypes) {
+        for (int i = 0; i < parameterTypes.length; i++) {
+            if (filterDependencies(parameterTypes[i]).size() == 0) {
+                return false;
+            }
+        }
+        return true;
     }
 }
