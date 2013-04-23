@@ -29,6 +29,7 @@ public class ScopedContainerTest {
 
     @Test
     public void shouldGenerateChildContainer() throws InvocationTargetException, ElkContainerException, InstantiationException, IllegalAccessException {
+
         elkContainer.addBean(Titanic.class);
         elkContainer.addChildContainer(childContainer);
         childContainer.addBean(Hero.class);
