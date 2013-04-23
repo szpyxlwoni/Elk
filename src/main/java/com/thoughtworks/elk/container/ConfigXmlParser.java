@@ -2,6 +2,7 @@ package com.thoughtworks.elk.container;
 
 import com.google.common.base.Function;
 import com.sun.istack.internal.Nullable;
+import com.thoughtworks.elk.container.exception.ElkContainerException;
 import com.thoughtworks.elk.container.exception.ElkParseException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -89,5 +90,19 @@ public class ConfigXmlParser {
             properties.add(new Property(propertyName.get(i), propertyRef.get(i), propertyType.get(i)));
         }
         return properties;
+    }
+
+    Class[] getDependenciesClass(List dependencies) {
+        return (Class[]) transform(dependencies, new Function<Object, Object>() {
+            @Override
+            public Object apply(@Nullable Object o) {
+                try {
+                    return Class.forName((String) o);
+                } catch (ClassNotFoundException e) {
+                    e.printStackTrace();
+                }
+                return null;
+            }
+        }).toArray(new Class[0]);
     }
 }
