@@ -87,4 +87,15 @@ public class ElkContainerTest {
         assertThat(container.getBean(Titanic.class),is(instanceOf(Titanic.class)));
         assertThat(container.getBean(Hero.class),is(nullValue()));
     }
+
+    @Test
+    public void parentShouldContainsHero() {
+        ElkContainer container = new ElkContainer();
+        container.addBean(Hero.class);
+        ElkContainer childContainer = new ElkContainer();
+        container.addChildContainer(childContainer);
+        ElkContainer grandsonContainer = new ElkContainer();
+        childContainer.addChildContainer(grandsonContainer);
+        assertThat(grandsonContainer.ifAncestorContains(Hero.class), is(true));
+    }
 }

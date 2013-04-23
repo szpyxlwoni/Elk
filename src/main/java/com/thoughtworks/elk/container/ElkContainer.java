@@ -23,6 +23,9 @@ public class ElkContainer {
     private final ConfigXmlParser configParser;
     private HashSet<Class> classList = newHashSet();
 
+    private HashSet<ElkContainer> children = null;
+    private ElkContainer parent = null;
+
     public ElkContainer() {
         configParser = null;
     }
@@ -103,10 +106,7 @@ public class ElkContainer {
     }
 
     public <T> T getBean(final Class<T> clazz) throws ElkContainerException, IllegalAccessException, InvocationTargetException, InstantiationException {
-        if (!classList.contains(clazz)) {
-            return null;
-        }
-
+        if (!validScope(clazz)) return null;
         Constructor<?>[] constructors = clazz.getConstructors();
         ArrayList<Class> classes = newArrayList();
         for (int i = 0; i < constructors.length; i++) {
@@ -123,6 +123,13 @@ public class ElkContainer {
             classes.clear();
         }
         return null;
+    }
+
+    public <T> boolean validScope(Class<T> clazz) {
+        if (classList.contains(clazz)||ifAncestorContains(clazz)) {
+            return true;
+        }
+        return false;
     }
 
     private Object[] getDependenciesObject(ArrayList<Class> classesArr) {
@@ -148,7 +155,25 @@ public class ElkContainer {
         });
     }
 
-    public void addChildContainer(ElkContainer childContainer) {
 
+    public void addChildContainer(ElkContainer childContainer) {
+        if (children == null) {
+            children = new HashSet<ElkContainer>();
+        }
+        children.add(childContainer);
+        childContainer.parent = this;
+    }
+
+    public boolean ifAncestorContains(Class clazz) {
+        while (parent != null) {
+            if (this.parent.classList.contains(clazz)) {
+                return true;
+            }
+            if (this.parent.parent == null) {
+                return false;
+            }
+            parent = this.parent.parent;
+        }
+        return false;
     }
 }
