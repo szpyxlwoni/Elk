@@ -4,13 +4,14 @@ import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.sun.istack.internal.Nullable;
 import com.thoughtworks.elk.container.exception.ElkContainerException;
+import com.thoughtworks.elk.injection.ConstructorInjection;
 import com.thoughtworks.elk.injection.Injection;
+import com.thoughtworks.elk.injection.SetterInjection;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 import static com.google.common.collect.Lists.transform;
 import static com.google.common.collect.Maps.newHashMap;
@@ -18,9 +19,9 @@ import static com.google.common.collect.Sets.filter;
 import static com.google.common.collect.Sets.newHashSet;
 
 public class ElkContainer {
-    private final ConfigXmlParser configParser;
+    private final ConfigFileParser configParser;
     private final Injection injection;
-    private HashSet<Class> classList = newHashSet();
+    private final HashSet<Class> classList;
     private HashMap beanList = newHashMap();
 
     private HashSet<ElkContainer> children = null;
@@ -29,6 +30,13 @@ public class ElkContainer {
     public ElkContainer(Injection injection) {
         this.injection = injection;
         configParser = null;
+        classList = newHashSet();
+    }
+
+    public ElkContainer(String configFilePath) {
+        configParser = new ConfigFileParser(configFilePath);
+        injection = configParser.getInjection();
+        classList = configParser.getClassList();
     }
 
     public void addBean(Class clazz) {

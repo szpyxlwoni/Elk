@@ -106,6 +106,27 @@ public class ElkContainerTest {
     }
 
     @Test
+    public void should_add_bean_through_property_file() throws InvocationTargetException, ElkContainerException, InstantiationException, IllegalAccessException {
+        ElkContainer aElkContainer = new ElkContainer("testConstructorInjection.property");
+        ElkContainer aElkContainerSetter = new ElkContainer("testSetterInjection.property");
+
+        assertThat(aElkContainer.getBean(Movie.class), notNullValue());
+        assertThat(aElkContainerSetter.getBean(Movie.class), notNullValue());
+    }
+
+    @Test
+    public void should_get_bean_with_dependencies_through_property_file() throws InvocationTargetException, ElkContainerException, InstantiationException, IllegalAccessException {
+        ElkContainer aElkContainer = new ElkContainer("testConstructorInjection.property");
+        ElkContainer aElkContainerSetter = new ElkContainer("testSetterInjection.property");
+
+        assertThat(aElkContainer.getBean(Movie.class), notNullValue());
+        assertThat(aElkContainer.getBean(Director.class), notNullValue());
+        assertThat(aElkContainer.getBean(Director.class).getMovie(), notNullValue());
+        assertThat(aElkContainerSetter.getBean(DirectorSetter.class), notNullValue());
+        assertThat(aElkContainerSetter.getBean(DirectorSetter.class).getMovie(), notNullValue());
+    }
+
+    @Test
     public void shouldNotGetABeanWithoutAdded() throws InvocationTargetException, InstantiationException, IllegalAccessException, ElkContainerException {
         elkContainer.addBean(Titanic.class);
 
