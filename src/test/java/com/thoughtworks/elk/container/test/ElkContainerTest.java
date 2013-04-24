@@ -85,6 +85,6 @@ public class ElkContainerTest {
         container.addChildContainer(childContainer);
         ElkContainer grandsonContainer = new ElkContainer();
         childContainer.addChildContainer(grandsonContainer);
-        assertThat(grandsonContainer.ifAncestorContains(Hero.class), is(true));
+        assertThat(grandsonContainer.isAncestorContains(Hero.class), is(true));
     }
 }
