@@ -19,8 +19,6 @@ import static com.google.common.collect.Sets.filter;
 import static com.google.common.collect.Sets.newHashSet;
 
 public class ElkContainer {
-
-    private final HashMap<String, Object> objectList = newHashMap();
     private final ConfigXmlParser configParser;
     private HashSet<Class> classList = newHashSet();
     private HashMap beanList = newHashMap();
@@ -50,6 +48,33 @@ public class ElkContainer {
         return (T) beanList.get(clazz);
     }
 
+    public Class findOneImplementClass(final Class clazz) {
+        ElkContainer currentContainer = this;
+        while (currentContainer != null) {
+            if (isImplementHaveBeenContained(clazz, currentContainer.classList)) {
+                return (Class) findImplementClasses(clazz, currentContainer.classList).toArray()[0];
+            }
+
+            if (currentContainer.parent == null) return null;
+
+            currentContainer = currentContainer.parent;
+        }
+        return null;
+    }
+
+    private boolean isImplementHaveBeenContained(Class clazz, HashSet currentList) {
+        return findImplementClasses(clazz, currentList).size() == 1;
+    }
+
+    private Set<Class> findImplementClasses(final Class clazz, HashSet<Class> currentList) {
+        return filter(currentList, new Predicate<Class>() {
+            @Override
+            public boolean apply(@Nullable Class clazzInContainer) {
+                return Arrays.asList(clazzInContainer.getInterfaces()).contains(clazz);
+            }
+        });
+    }
+
     private <T> T buildBeanWithDependencies(Class<T> clazz) throws InstantiationException, IllegalAccessException, InvocationTargetException {
         Constructor<?>[] constructors = clazz.getConstructors();
         for (int i = 0; i < constructors.length; i++) {
@@ -58,30 +83,6 @@ public class ElkContainer {
             }
         }
         return null;
-    }
-
-    public Class findOneImplementClass(final Class clazz) {
-        if (isImplementHaveBeenContained(clazz, classList)) return (Class) findImplementClasses(clazz, classList).toArray()[0];
-
-        return findImplementClassesInAncestor(clazz);
-    }
-
-    private Class findImplementClassesInAncestor(Class clazz) {
-        ElkContainer parentContainer = parent;
-        while (parentContainer != null) {
-            if (isImplementHaveBeenContained(clazz, parentContainer.classList)) {
-                return (Class) findImplementClasses(clazz, parentContainer.classList).toArray()[0];
-            }
-            if (parentContainer.parent == null) {
-                return null;
-            }
-            parentContainer = parentContainer.parent;
-        }
-        return null;
-    }
-
-    private boolean isImplementHaveBeenContained(Class clazz, HashSet currentList) {
-        return findImplementClasses(clazz, currentList).size() == 1;
     }
 
     public boolean isParameterAllInBeanList(Class<?>[] parameterTypes) {
@@ -94,27 +95,26 @@ public class ElkContainer {
     }
 
     public <T> boolean validScope(Class<T> clazz) {
-        if (isInClassList(clazz, classList) || isAncestorContains(clazz)) {
-            return true;
+        ElkContainer currentContainer = this;
+        while (currentContainer != null) {
+            if (isClassHaveBeenContained(clazz, currentContainer.classList) || isImplementHaveBeenContained(clazz, currentContainer.classList)) {
+                return true;
+            }
+            if (currentContainer.parent == null) {
+                return false;
+            }
+            currentContainer = currentContainer.parent;
         }
         return false;
     }
 
-    private boolean isInClassList(Class clazz, HashSet<Class> currentList) {
-        return isClassHaveBeenContained(clazz, currentList) || isImplementHaveBeenContained(clazz, currentList);
-    }
-
-    private boolean isClassHaveBeenContained(Class clazz, HashSet currentList) {
-        return findClasses(clazz, currentList).size() == 1;
-    }
-
-    private Set<Class> findImplementClasses(final Class clazz, HashSet<Class> currentList) {
+    private boolean isClassHaveBeenContained(final Class clazz, HashSet currentList) {
         return filter(currentList, new Predicate<Class>() {
             @Override
             public boolean apply(@Nullable Class clazzInContainer) {
-                return Arrays.asList(clazzInContainer.getInterfaces()).contains(clazz);
+                return clazzInContainer == clazz;
             }
-        });
+        }).size() == 1;
     }
 
     private Object[] getDependenciesObject(Class<?>[] classes) {
@@ -129,29 +129,6 @@ public class ElkContainer {
                 return null;
             }
         }).toArray();
-    }
-
-    private <T> Set<Class> findClasses(final Class<T> clazz, HashSet<Class> currentList) {
-        return filter(currentList, new Predicate<Class>() {
-            @Override
-            public boolean apply(@Nullable Class clazzInContainer) {
-                return clazzInContainer == clazz;
-            }
-        });
-    }
-
-    public boolean isAncestorContains(Class clazz) {
-        ElkContainer parentContainer = parent;
-        while (parentContainer != null) {
-            if (isInClassList(clazz, parentContainer.classList)) {
-                return true;
-            }
-            if (parentContainer.parent == null) {
-                return false;
-            }
-            parentContainer = parentContainer.parent;
-        }
-        return false;
     }
 
     public void addChildContainer(ElkContainer childContainer) {

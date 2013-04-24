@@ -46,7 +46,7 @@ public class ScopedContainerTest {
         parentContainer.addBean(Hollywood.class);
         parentContainer.addBean(Company.class);
         childContainer.addBean(Hero.class);
-        assertThat(childContainer.isAncestorContains(Company.class),is(true));
+        assertThat(childContainer.validScope(Company.class),is(true));
         assertThat(childContainer.getBean(Company.class), notNullValue());
         assertThat(parentContainer.getBean(Hero.class), is(nullValue()));
 
