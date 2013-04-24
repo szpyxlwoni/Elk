@@ -2,9 +2,9 @@ package com.thoughtworks.elk.container.test;
 
 import com.thoughtworks.elk.container.ElkContainer;
 import com.thoughtworks.elk.container.exception.ElkContainerException;
+import com.thoughtworks.elk.injection.ConstructorInjection;
 import com.thoughtworks.elk.movie.*;
 import com.thoughtworks.elk.movie.test.Hero;
-import org.hamcrest.CoreMatchers;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -12,7 +12,6 @@ import java.lang.reflect.InvocationTargetException;
 
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
-import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -25,7 +24,7 @@ public class ElkContainerTest {
 
     @Before
     public void setUp() throws Exception {
-        elkContainer = new ElkContainer("testConstructorInjection.xml");
+        elkContainer = new ElkContainer(new ConstructorInjection());
         elkContainer.addBean(Hollywood.class);
         elkContainer.addBean(Director.class);
     }
@@ -44,6 +43,24 @@ public class ElkContainerTest {
         Director director = elkContainer.getBean(Director.class);
 
         assertThat(director, notNullValue());
+    }
+
+    @Test
+    public void should_find_implement_class_in_current_container() throws InvocationTargetException, ElkContainerException, InstantiationException, IllegalAccessException {
+        elkContainer.addBean(Titanic.class);
+
+        assertThat(elkContainer.getBean(Movie.class), instanceOf(Movie.class));
+        assertThat(elkContainer.getBean(Movie.class), notNullValue());
+    }
+
+    @Test
+    public void should_find_implement_class_in_parent_container() throws InvocationTargetException, ElkContainerException, InstantiationException, IllegalAccessException {
+        elkContainer.addBean(Titanic.class);
+        ElkContainer childContainer = new ElkContainer(new ConstructorInjection());
+        elkContainer.addChildContainer(childContainer);
+
+        assertThat(childContainer.getBean(Movie.class), instanceOf(Movie.class));
+        assertThat(childContainer.getBean(Movie.class), notNullValue());
     }
 
     @Test
@@ -70,24 +87,6 @@ public class ElkContainerTest {
     }
 
     @Test
-    public void should_find_implement_class_in_current_container() throws InvocationTargetException, ElkContainerException, InstantiationException, IllegalAccessException {
-        elkContainer.addBean(Titanic.class);
-
-        assertThat(elkContainer.getBean(Movie.class), instanceOf(Movie.class));
-        assertThat(elkContainer.getBean(Movie.class), notNullValue());
-    }
-
-    @Test
-    public void should_find_implement_class_in_parent_container() throws InvocationTargetException, ElkContainerException, InstantiationException, IllegalAccessException {
-        elkContainer.addBean(Titanic.class);
-        ElkContainer childContainer = new ElkContainer();
-        elkContainer.addChildContainer(childContainer);
-
-        assertThat(childContainer.getBean(Movie.class), instanceOf(Movie.class));
-        assertThat(childContainer.getBean(Movie.class), notNullValue());
-    }
-
-    @Test
     public void shouldNotGetABeanWithoutAdded() throws InvocationTargetException, InstantiationException, IllegalAccessException, ElkContainerException {
         elkContainer.addBean(Titanic.class);
 
@@ -97,11 +96,11 @@ public class ElkContainerTest {
 
     @Test
     public void parentShouldContainsHero() {
-        ElkContainer container = new ElkContainer();
+        ElkContainer container = new ElkContainer(new ConstructorInjection());
         container.addBean(Hero.class);
-        ElkContainer childContainer = new ElkContainer();
+        ElkContainer childContainer = new ElkContainer(new ConstructorInjection());
         container.addChildContainer(childContainer);
-        ElkContainer grandsonContainer = new ElkContainer();
+        ElkContainer grandsonContainer = new ElkContainer(new ConstructorInjection());
         childContainer.addChildContainer(grandsonContainer);
         assertThat(grandsonContainer.validScope(Hero.class), is(true));
     }

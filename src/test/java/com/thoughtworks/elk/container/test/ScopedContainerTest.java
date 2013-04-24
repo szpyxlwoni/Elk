@@ -3,6 +3,7 @@ package com.thoughtworks.elk.container.test;
 
 import com.thoughtworks.elk.container.ElkContainer;
 import com.thoughtworks.elk.container.exception.ElkContainerException;
+import com.thoughtworks.elk.injection.ConstructorInjection;
 import com.thoughtworks.elk.movie.Company;
 import com.thoughtworks.elk.movie.Hollywood;
 import com.thoughtworks.elk.movie.Titanic;
@@ -24,8 +25,8 @@ public class ScopedContainerTest {
 
     @Before
     public void before() {
-        elkContainer = new ElkContainer();
-        childContainer = new ElkContainer();
+        elkContainer = new ElkContainer(new ConstructorInjection());
+        childContainer = new ElkContainer(new ConstructorInjection());
     }
 
     @Test
@@ -40,8 +41,8 @@ public class ScopedContainerTest {
 
     @Test
     public void testAddChildContainer() throws InvocationTargetException, ElkContainerException, InstantiationException, IllegalAccessException {
-        ElkContainer parentContainer = new ElkContainer();
-        ElkContainer childContainer = new ElkContainer();
+        ElkContainer parentContainer = new ElkContainer(new ConstructorInjection());
+        ElkContainer childContainer = new ElkContainer(new ConstructorInjection());
         parentContainer.addChildContainer(childContainer);
         parentContainer.addBean(Hollywood.class);
         parentContainer.addBean(Company.class);

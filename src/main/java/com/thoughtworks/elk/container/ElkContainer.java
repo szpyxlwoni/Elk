@@ -4,9 +4,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.sun.istack.internal.Nullable;
 import com.thoughtworks.elk.container.exception.ElkContainerException;
-import com.thoughtworks.elk.container.exception.ElkParseException;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -20,18 +18,16 @@ import static com.google.common.collect.Sets.newHashSet;
 
 public class ElkContainer {
     private final ConfigXmlParser configParser;
+    private final Injection injection;
     private HashSet<Class> classList = newHashSet();
     private HashMap beanList = newHashMap();
 
     private HashSet<ElkContainer> children = null;
     private ElkContainer parent = null;
 
-    public ElkContainer() {
+    public ElkContainer(Injection injection) {
+        this.injection = injection;
         configParser = null;
-    }
-
-    public ElkContainer(String configFile) throws ElkParseException {
-        configParser = new ConfigXmlParser(configFile);
     }
 
     public void addBean(Class clazz) {
@@ -43,7 +39,7 @@ public class ElkContainer {
 
         if (clazz.isInterface()) return (T) getBean(findOneImplementClass(clazz));
 
-        if (beanList.get(clazz) == null) return buildBeanWithDependencies(clazz);
+        if (beanList.get(clazz) == null) return injection.buildBeanWithDependencies(clazz, this);
 
         return (T) beanList.get(clazz);
     }
@@ -73,16 +69,6 @@ public class ElkContainer {
                 return Arrays.asList(clazzInContainer.getInterfaces()).contains(clazz);
             }
         });
-    }
-
-    private <T> T buildBeanWithDependencies(Class<T> clazz) throws InstantiationException, IllegalAccessException, InvocationTargetException {
-        Constructor<?>[] constructors = clazz.getConstructors();
-        for (int i = 0; i < constructors.length; i++) {
-            if (isParameterAllInBeanList(constructors[i].getParameterTypes())) {
-                return (T) constructors[i].newInstance(getDependenciesObject(constructors[i].getParameterTypes()));
-            }
-        }
-        return null;
     }
 
     public boolean isParameterAllInBeanList(Class<?>[] parameterTypes) {
@@ -117,7 +103,7 @@ public class ElkContainer {
         }).size() == 1;
     }
 
-    private Object[] getDependenciesObject(Class<?>[] classes) {
+    public Object[] getDependenciesObject(Class<?>[] classes) {
         return transform(Arrays.asList(classes), new Function<Object, Object>() {
             @Override
             public Object apply(@Nullable Object o) {
