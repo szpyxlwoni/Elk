@@ -4,6 +4,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.sun.istack.internal.Nullable;
 import com.thoughtworks.elk.container.exception.ElkContainerException;
+import com.thoughtworks.elk.injection.Injection;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
@@ -39,7 +40,11 @@ public class ElkContainer {
 
         if (clazz.isInterface()) return (T) getBean(findOneImplementClass(clazz));
 
-        if (beanList.get(clazz) == null) return injection.buildBeanWithDependencies(clazz, this);
+        if (beanList.get(clazz) == null) {
+            T instance = injection.buildBeanWithDependencies(clazz, this);
+            beanList.put(clazz, instance);
+            return instance;
+        }
 
         return (T) beanList.get(clazz);
     }

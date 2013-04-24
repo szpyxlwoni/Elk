@@ -1,4 +1,6 @@
-package com.thoughtworks.elk.container;
+package com.thoughtworks.elk.injection;
+
+import com.thoughtworks.elk.container.ElkContainer;
 
 import java.lang.reflect.InvocationTargetException;
 

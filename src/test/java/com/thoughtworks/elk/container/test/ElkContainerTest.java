@@ -3,8 +3,10 @@ package com.thoughtworks.elk.container.test;
 import com.thoughtworks.elk.container.ElkContainer;
 import com.thoughtworks.elk.container.exception.ElkContainerException;
 import com.thoughtworks.elk.injection.ConstructorInjection;
+import com.thoughtworks.elk.injection.SetterInjection;
 import com.thoughtworks.elk.movie.*;
 import com.thoughtworks.elk.movie.test.Hero;
+import org.hamcrest.CoreMatchers;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -21,19 +23,25 @@ import static org.hamcrest.core.IsNull.notNullValue;
 public class ElkContainerTest {
 
     private ElkContainer elkContainer;
+    private ElkContainer elkContainerSetter;
 
     @Before
     public void setUp() throws Exception {
         elkContainer = new ElkContainer(new ConstructorInjection());
+        elkContainerSetter = new ElkContainer(new SetterInjection());
         elkContainer.addBean(Hollywood.class);
         elkContainer.addBean(Director.class);
+        elkContainerSetter.addBean(Titanic.class);
+        elkContainerSetter.addBean(Director.class);
     }
 
     @Test
     public void should_add_bean_and_get_bean_through_class() throws Exception {
         Hollywood hollywood = elkContainer.getBean(Hollywood.class);
+        Titanic titanic = elkContainerSetter.getBean(Titanic.class);
 
         assertThat(hollywood, notNullValue());
+        assertThat(titanic, notNullValue());
     }
 
     @Test
@@ -51,6 +59,7 @@ public class ElkContainerTest {
 
         assertThat(elkContainer.getBean(Movie.class), instanceOf(Movie.class));
         assertThat(elkContainer.getBean(Movie.class), notNullValue());
+        assertThat(elkContainerSetter.getBean(Movie.class), notNullValue());
     }
 
     @Test
@@ -84,6 +93,16 @@ public class ElkContainerTest {
         Class implementClass = elkContainer.findOneImplementClass(Company.class);
 
         assertThat(implementClass.toString(), is("class com.thoughtworks.elk.movie.Hollywood"));
+    }
+
+    @Test
+    public void should_not_get_duplicate_bean() throws InvocationTargetException, ElkContainerException, InstantiationException, IllegalAccessException {
+        elkContainer.addBean(Titanic.class);
+        Movie movie = elkContainer.getBean(Movie.class);
+        Director director = elkContainer.getBean(Director.class);
+
+        assertThat(movie, notNullValue());
+        assertThat(director.getMovie(), is(movie));
     }
 
     @Test
