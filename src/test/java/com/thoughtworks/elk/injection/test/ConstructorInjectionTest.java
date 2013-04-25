@@ -19,9 +19,9 @@ public class ConstructorInjectionTest {
             throws IllegalAccessException, InstantiationException, InvocationTargetException {
         Injection injection = new ConstructorInjection();
         ElkContainer elkContainer = new ElkContainer(injection);
-        elkContainer.addBean(Titanic.class);
-        elkContainer.addBean(Hollywood.class);
-        elkContainer.addBean(Director.class);
+        elkContainer.register(Titanic.class);
+        elkContainer.register(Hollywood.class);
+        elkContainer.register(Director.class);
 
         Director director = injection.buildBeanWithDependencies(Director.class, elkContainer);
 

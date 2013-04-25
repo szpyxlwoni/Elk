@@ -6,7 +6,6 @@ import com.thoughtworks.elk.injection.ConstructorInjection;
 import com.thoughtworks.elk.injection.SetterInjection;
 import com.thoughtworks.elk.movie.*;
 import com.thoughtworks.elk.movie.test.Hero;
-import org.hamcrest.CoreMatchers;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -29,10 +28,10 @@ public class ElkContainerTest {
     public void setUp() throws Exception {
         elkContainer = new ElkContainer(new ConstructorInjection());
         elkContainerSetter = new ElkContainer(new SetterInjection());
-        elkContainer.addBean(Hollywood.class);
-        elkContainer.addBean(Director.class);
-        elkContainerSetter.addBean(Titanic.class);
-        elkContainerSetter.addBean(Director.class);
+        elkContainer.register(Hollywood.class);
+        elkContainer.register(Director.class);
+        elkContainerSetter.register(Titanic.class);
+        elkContainerSetter.register(Director.class);
     }
 
     @Test
@@ -46,7 +45,7 @@ public class ElkContainerTest {
 
     @Test
     public void should_get_bean_added_all_dependencies() throws Exception {
-        elkContainer.addBean(Titanic.class);
+        elkContainer.register(Titanic.class);
 
         Director director = elkContainer.getBean(Director.class);
 
@@ -55,7 +54,7 @@ public class ElkContainerTest {
 
     @Test
     public void should_find_implement_class_in_current_container() throws InvocationTargetException, ElkContainerException, InstantiationException, IllegalAccessException {
-        elkContainer.addBean(Titanic.class);
+        elkContainer.register(Titanic.class);
 
         assertThat(elkContainer.getBean(Movie.class), instanceOf(Movie.class));
         assertThat(elkContainer.getBean(Movie.class), notNullValue());
@@ -64,7 +63,7 @@ public class ElkContainerTest {
 
     @Test
     public void should_find_implement_class_in_parent_container() throws InvocationTargetException, ElkContainerException, InstantiationException, IllegalAccessException {
-        elkContainer.addBean(Titanic.class);
+        elkContainer.register(Titanic.class);
         ElkContainer childContainer = new ElkContainer(new ConstructorInjection());
         elkContainer.addChildContainer(childContainer);
 
@@ -74,16 +73,16 @@ public class ElkContainerTest {
 
     @Test
     public void should_parameter_can_not_be_found_given_not_enough_bean() throws Exception {
-        boolean parameterAllInBeanList = elkContainer.isParameterAllInBeanList(Director.class.getConstructor(Movie.class, Company.class).getParameterTypes());
+        boolean parameterAllInBeanList = elkContainer.isParameterAllInClassList(Director.class.getConstructor(Movie.class, Company.class).getParameterTypes());
 
         assertFalse(parameterAllInBeanList);
     }
 
     @Test
     public void should_parameter_can_be_found_given_enough_bean() throws Exception {
-        elkContainer.addBean(Titanic.class);
+        elkContainer.register(Titanic.class);
 
-        boolean parameterAllInBeanList = elkContainer.isParameterAllInBeanList(Director.class.getConstructor(Movie.class, Company.class).getParameterTypes());
+        boolean parameterAllInBeanList = elkContainer.isParameterAllInClassList(Director.class.getConstructor(Movie.class, Company.class).getParameterTypes());
 
         assertTrue(parameterAllInBeanList);
     }
@@ -97,7 +96,7 @@ public class ElkContainerTest {
 
     @Test
     public void should_not_get_duplicate_bean() throws InvocationTargetException, ElkContainerException, InstantiationException, IllegalAccessException {
-        elkContainer.addBean(Titanic.class);
+        elkContainer.register(Titanic.class);
         Movie movie = elkContainer.getBean(Movie.class);
         Director director = elkContainer.getBean(Director.class);
 
@@ -128,7 +127,7 @@ public class ElkContainerTest {
 
     @Test
     public void shouldNotGetABeanWithoutAdded() throws InvocationTargetException, InstantiationException, IllegalAccessException, ElkContainerException {
-        elkContainer.addBean(Titanic.class);
+        elkContainer.register(Titanic.class);
 
         assertThat(elkContainer.getBean(Titanic.class), is(instanceOf(Titanic.class)));
         assertThat(elkContainer.getBean(Hero.class), is(nullValue()));
@@ -137,7 +136,7 @@ public class ElkContainerTest {
     @Test
     public void parentShouldContainsHero() {
         ElkContainer container = new ElkContainer(new ConstructorInjection());
-        container.addBean(Hero.class);
+        container.register(Hero.class);
         ElkContainer childContainer = new ElkContainer(new ConstructorInjection());
         container.addChildContainer(childContainer);
         ElkContainer grandsonContainer = new ElkContainer(new ConstructorInjection());

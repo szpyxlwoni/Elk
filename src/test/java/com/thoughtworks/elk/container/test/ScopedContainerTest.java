@@ -32,9 +32,9 @@ public class ScopedContainerTest {
     @Test
     public void shouldGenerateChildContainer() throws InvocationTargetException, ElkContainerException, InstantiationException, IllegalAccessException {
 
-        elkContainer.addBean(Titanic.class);
+        elkContainer.register(Titanic.class);
         elkContainer.addChildContainer(childContainer);
-        childContainer.addBean(Hero.class);
+        childContainer.register(Hero.class);
         assertThat(childContainer.getBean(Titanic.class), is(IsInstanceOf.instanceOf(Titanic.class)));
         assertThat(elkContainer.getBean(Hero.class), nullValue());
     }
@@ -44,9 +44,9 @@ public class ScopedContainerTest {
         ElkContainer parentContainer = new ElkContainer(new ConstructorInjection());
         ElkContainer childContainer = new ElkContainer(new ConstructorInjection());
         parentContainer.addChildContainer(childContainer);
-        parentContainer.addBean(Hollywood.class);
-        parentContainer.addBean(Company.class);
-        childContainer.addBean(Hero.class);
+        parentContainer.register(Hollywood.class);
+        parentContainer.register(Company.class);
+        childContainer.register(Hero.class);
         assertThat(childContainer.validScope(Company.class),is(true));
         assertThat(childContainer.getBean(Company.class), notNullValue());
         assertThat(parentContainer.getBean(Hero.class), is(nullValue()));

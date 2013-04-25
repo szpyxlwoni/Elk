@@ -4,6 +4,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.sun.istack.internal.Nullable;
 import com.thoughtworks.elk.container.exception.ElkContainerException;
+import com.thoughtworks.elk.container.exception.ElkParseException;
 import com.thoughtworks.elk.injection.ConstructorInjection;
 import com.thoughtworks.elk.injection.Injection;
 import com.thoughtworks.elk.injection.SetterInjection;
@@ -39,7 +40,7 @@ public class ElkContainer {
         classList = configParser.getClassList();
     }
 
-    public void addBean(Class clazz) {
+    public void register(Class clazz) {
         classList.add(clazz);
     }
 
@@ -58,17 +59,22 @@ public class ElkContainer {
     }
 
     public Class findOneImplementClass(final Class clazz) {
-        ElkContainer currentContainer = this;
-        while (currentContainer != null) {
-            if (isImplementHaveBeenContained(clazz, currentContainer.classList)) {
-                return (Class) findImplementClasses(clazz, currentContainer.classList).toArray()[0];
+        return visit(this, new ContainerVisitor<Class>() {
+            @Override
+            public boolean isAppropriateContainer(ElkContainer container) {
+                return isImplementHaveBeenContained(clazz, container.classList);
             }
 
-            if (currentContainer.parent == null) return null;
+            @Override
+            public Class returnWhenAppropriateContainerFound(ElkContainer container) {
+                return (Class) findImplementClasses(clazz, container.classList).toArray()[0];
+            }
 
-            currentContainer = currentContainer.parent;
-        }
-        return null;
+            @Override
+            public Class returnWhenNoMoreParentContainer() {
+                return null;
+            }
+        });
     }
 
     private boolean isImplementHaveBeenContained(Class clazz, HashSet currentList) {
@@ -84,7 +90,7 @@ public class ElkContainer {
         });
     }
 
-    public boolean isParameterAllInBeanList(Class<?>[] parameterTypes) {
+    public boolean isParameterAllInClassList(Class<?>[] parameterTypes) {
         for (int i = 0; i < parameterTypes.length; i++) {
             if (!validScope(parameterTypes[i])) {
                 return false;
@@ -93,18 +99,44 @@ public class ElkContainer {
         return true;
     }
 
-    public <T> boolean validScope(Class<T> clazz) {
-        ElkContainer currentContainer = this;
-        while (currentContainer != null) {
-            if (isClassHaveBeenContained(clazz, currentContainer.classList) || isImplementHaveBeenContained(clazz, currentContainer.classList)) {
+    public boolean validScope(final Class clazz) {
+        return visit(this, new ContainerVisitor<Boolean>() {
+            @Override
+            public boolean isAppropriateContainer(ElkContainer container) {
+                return isClassHaveBeenContained(clazz, container.classList)
+                        || isImplementHaveBeenContained(clazz, container.classList);
+            }
+
+            @Override
+            public Boolean returnWhenAppropriateContainerFound(ElkContainer container) {
                 return true;
             }
-            if (currentContainer.parent == null) {
+
+            @Override
+            public Boolean returnWhenNoMoreParentContainer() {
                 return false;
+            }
+        });
+    }
+
+    private <T> T visit(ElkContainer container, ContainerVisitor<T> visitor) {
+        ElkContainer currentContainer = container;
+        while (currentContainer != null) {
+            if (visitor.isAppropriateContainer(currentContainer)) {
+                return visitor.returnWhenAppropriateContainerFound(currentContainer);
+            }
+            if (currentContainer.parent == null) {
+                return visitor.returnWhenNoMoreParentContainer();
             }
             currentContainer = currentContainer.parent;
         }
-        return false;
+        return visitor.returnWhenNoMoreParentContainer();
+    }
+
+    interface ContainerVisitor<RETURN_TYPE> {
+        boolean isAppropriateContainer(ElkContainer container);
+        RETURN_TYPE returnWhenAppropriateContainerFound(ElkContainer container);
+        RETURN_TYPE returnWhenNoMoreParentContainer();
     }
 
     private boolean isClassHaveBeenContained(final Class clazz, HashSet currentList) {

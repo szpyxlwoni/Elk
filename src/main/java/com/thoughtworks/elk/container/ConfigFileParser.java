@@ -1,5 +1,6 @@
 package com.thoughtworks.elk.container;
 
+import com.thoughtworks.elk.container.exception.ElkParseException;
 import com.thoughtworks.elk.injection.ConstructorInjection;
 import com.thoughtworks.elk.injection.Injection;
 import com.thoughtworks.elk.injection.SetterInjection;

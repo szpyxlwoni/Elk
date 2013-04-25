@@ -10,7 +10,7 @@ public class ConstructorInjection implements Injection {
             throws InstantiationException, IllegalAccessException, InvocationTargetException {
         Constructor<?>[] constructors = clazz.getConstructors();
         for (int i = 0; i < constructors.length; i++) {
-            if (elkContainer.isParameterAllInBeanList(constructors[i].getParameterTypes())) {
+            if (elkContainer.isParameterAllInClassList(constructors[i].getParameterTypes())) {
                 return (T) constructors[i].newInstance(elkContainer.getDependenciesObject(constructors[i].getParameterTypes()));
             }
         }

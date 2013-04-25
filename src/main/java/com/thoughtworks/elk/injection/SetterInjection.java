@@ -13,7 +13,7 @@ public class SetterInjection implements Injection {
         Method[] methods = clazz.getMethods();
         T instance = clazz.newInstance();
         for (int i = 0; i < methods.length; i++) {
-            if (methods[i].getName().startsWith("set") && elkContainer.isParameterAllInBeanList(methods[i].getParameterTypes())) {
+            if (methods[i].getName().startsWith("set") && elkContainer.isParameterAllInClassList(methods[i].getParameterTypes())) {
                 try {
                     methods[i].invoke(instance, elkContainer.getBean(methods[i].getParameterTypes()[0]));
                 } catch (ElkContainerException e) {

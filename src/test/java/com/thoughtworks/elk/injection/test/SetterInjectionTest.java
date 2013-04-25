@@ -3,7 +3,6 @@ package com.thoughtworks.elk.injection.test;
 import com.thoughtworks.elk.container.ElkContainer;
 import com.thoughtworks.elk.injection.Injection;
 import com.thoughtworks.elk.injection.SetterInjection;
-import com.thoughtworks.elk.movie.Director;
 import com.thoughtworks.elk.movie.DirectorSetter;
 import com.thoughtworks.elk.movie.Hollywood;
 import com.thoughtworks.elk.movie.Titanic;
@@ -20,9 +19,9 @@ public class SetterInjectionTest {
             throws IllegalAccessException, InvocationTargetException, InstantiationException {
         Injection injection = new SetterInjection();
         ElkContainer elkContainer = new ElkContainer(injection);
-        elkContainer.addBean(Titanic.class);
-        elkContainer.addBean(Hollywood.class);
-        elkContainer.addBean(DirectorSetter.class);
+        elkContainer.register(Titanic.class);
+        elkContainer.register(Hollywood.class);
+        elkContainer.register(DirectorSetter.class);
 
         DirectorSetter director = injection.buildBeanWithDependencies(DirectorSetter.class, elkContainer);
 
