@@ -1,7 +1,7 @@
 package com.thoughtworks.elk.container;
 
 import com.google.common.base.Function;
-import com.sun.istack.internal.Nullable;
+import javax.annotation.Nullable;
 import com.thoughtworks.elk.container.exception.ElkContainerException;
 import com.thoughtworks.elk.container.exception.ElkParseException;
 import org.w3c.dom.Document;

@@ -12,3 +12,7 @@ TODO List
 - [ ] Option:delete type attribute in xml config file
 - [ ] Option:implement factory injection
 - [ ] Option:implement annotation
+
+License
+====
+MIT License
